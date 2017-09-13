@@ -34,6 +34,7 @@ import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -75,7 +76,7 @@ public class AHBottomNavigation extends FrameLayout {
 	// Variables
 	private Context context;
 	private Resources resources;
-	private ArrayList<AHBottomNavigationItem> items = new ArrayList<>();
+	private ArrayList<AHBottomNavigationBaseItem> items = new ArrayList<>();
 	private ArrayList<View> views = new ArrayList<>();
 	private AHBottomNavigationBehavior<AHBottomNavigation> bottomNavigationBehavior;
 	private LinearLayout linearLayoutContainer;
@@ -398,7 +399,15 @@ public class AHBottomNavigation extends FrameLayout {
 		for (int i = 0; i < items.size(); i++) {
 			final boolean current = currentItem == i;
 			final int itemIndex = i;
-			AHBottomNavigationItem item = items.get(itemIndex);
+			AHBottomNavigationBaseItem baseItem = items.get(itemIndex);
+
+			if (baseItem instanceof AHBottomNavigationButton) {
+				createMenuButton(linearLayout, inflater, (AHBottomNavigationButton) baseItem,
+						(int) height, (int) itemWidth, itemIndex);
+				continue;
+			}
+
+			AHBottomNavigationItem item = (AHBottomNavigationItem) baseItem;
 
 			View view = inflater.inflate(R.layout.bottom_navigation_item, this, false);
 			FrameLayout container = (FrameLayout) view.findViewById(R.id.bottom_navigation_container);
@@ -523,7 +532,14 @@ public class AHBottomNavigation extends FrameLayout {
 		for (int i = 0; i < items.size(); i++) {
 
 			final int itemIndex = i;
-			AHBottomNavigationItem item = items.get(itemIndex);
+			AHBottomNavigationBaseItem baseItem = items.get(itemIndex);
+			if (baseItem instanceof AHBottomNavigationButton) {
+				createMenuButton(linearLayout, inflater, (AHBottomNavigationButton) baseItem,
+						(int) height, (int) itemWidth, itemIndex);
+				continue;
+			}
+
+			AHBottomNavigationItem item = (AHBottomNavigationItem) baseItem;
 
 			View view = inflater.inflate(R.layout.bottom_navigation_small_item, this, false);
 			ImageView icon = (ImageView) view.findViewById(R.id.bottom_navigation_small_item_icon);
@@ -622,6 +638,27 @@ public class AHBottomNavigation extends FrameLayout {
 		updateNotifications(true, UPDATE_ALL_NOTIFICATIONS);
 	}
 
+	private void createMenuButton(LinearLayout linearLayout, LayoutInflater inflater,
+								  AHBottomNavigationButton item, int height, int itemWidth,
+								  final int itemIndex) {
+		View view = inflater.inflate(R.layout.bottom_navigation_button, this, false);
+		ImageButton imageButton = view.findViewById(R.id.bottom_navigation_item_button);
+		imageButton.setBackground(item.getBackground(context));
+		imageButton.setImageDrawable(item.getDrawable(context));
+		imageButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (tabSelectedListener != null) {
+                    tabSelectedListener.onTabSelected(itemIndex, false);
+                }
+            }
+        });
+
+		MarginLayoutParams layoutParams = new MarginLayoutParams(itemWidth, height);
+		linearLayout.addView(view, layoutParams);
+		views.add(view);
+	}
+
 
 	/**
 	 * Update Items UI
@@ -659,6 +696,14 @@ public class AHBottomNavigation extends FrameLayout {
 		for (int i = 0; i < views.size(); i++) {
 
 			final View view = views.get(i);
+			final AHBottomNavigationBaseItem baseItem = items.get(itemIndex);
+
+			if (baseItem instanceof AHBottomNavigationButton) {
+				continue;
+			}
+
+			final AHBottomNavigationItem item = (AHBottomNavigationItem) baseItem;
+
 			if (selectedBackgroundVisible) {
 				view.setSelected(i == itemIndex);
 			}
@@ -675,7 +720,7 @@ public class AHBottomNavigation extends FrameLayout {
 				AHHelper.updateTextColor(title, itemInactiveColor, itemActiveColor);
 				AHHelper.updateTextSize(title, inactiveSize, activeSize);
 				if (useTint) {
-					AHHelper.updateDrawableColor(context, items.get(itemIndex).getDrawable(context), icon,
+					AHHelper.updateDrawableColor(context, item.getDrawable(context), icon,
 							itemInactiveColor, itemActiveColor, forceTint);
 				}
 
@@ -687,7 +732,7 @@ public class AHBottomNavigation extends FrameLayout {
 
 					if (circleRevealAnim != null && circleRevealAnim.isRunning()) {
 						circleRevealAnim.cancel();
-						setBackgroundColor(items.get(itemIndex).getColor(context));
+						setBackgroundColor(item.getColor(context));
 						backgroundColorView.setBackgroundColor(Color.TRANSPARENT);
 					}
 
@@ -696,12 +741,12 @@ public class AHBottomNavigation extends FrameLayout {
 					circleRevealAnim.addListener(new Animator.AnimatorListener() {
 						@Override
 						public void onAnimationStart(Animator animation) {
-							backgroundColorView.setBackgroundColor(items.get(itemIndex).getColor(context));
+							backgroundColorView.setBackgroundColor(item.getColor(context));
 						}
 
 						@Override
 						public void onAnimationEnd(Animator animation) {
-							setBackgroundColor(items.get(itemIndex).getColor(context));
+							setBackgroundColor(item.getColor(context));
 							backgroundColorView.setBackgroundColor(Color.TRANSPARENT);
 						}
 
@@ -716,7 +761,7 @@ public class AHBottomNavigation extends FrameLayout {
 					circleRevealAnim.start();
 				} else if (colored) {
 					AHHelper.updateViewBackgroundColor(this, currentColor,
-							items.get(itemIndex).getColor(context));
+							item.getColor(context));
 				} else {
 					if (defaultBackgroundResource != 0) {
 						setBackgroundResource(defaultBackgroundResource);
@@ -738,15 +783,20 @@ public class AHBottomNavigation extends FrameLayout {
 				AHHelper.updateTextColor(title, itemActiveColor, itemInactiveColor);
 				AHHelper.updateTextSize(title, activeSize, inactiveSize);
 				if (useTint) {
-					AHHelper.updateDrawableColor(context, items.get(currentItem).getDrawable(context), icon,
+					AHHelper.updateDrawableColor(context, item.getDrawable(context), icon,
 							itemActiveColor, itemInactiveColor, forceTint);
 				}
 			}
 		}
 
 		currentItem = itemIndex;
+		AHBottomNavigationBaseItem item = items.get(currentItem);
+		if (item instanceof AHBottomNavigationButton) {
+			return;
+		}
+
 		if (currentItem > 0 && currentItem < items.size()) {
-			currentColor = items.get(currentItem).getColor(context);
+			currentColor = ((AHBottomNavigationItem) item).getColor(context);
 		} else if (currentItem == CURRENT_ITEM_NONE) {
 			if (defaultBackgroundResource != 0) {
 				setBackgroundResource(defaultBackgroundResource);
@@ -783,6 +833,14 @@ public class AHBottomNavigation extends FrameLayout {
 		for (int i = 0; i < views.size(); i++) {
 
 			final View view = views.get(i);
+			final AHBottomNavigationBaseItem baseItem = items.get(itemIndex);
+
+			if (baseItem instanceof AHBottomNavigationButton) {
+				continue;
+			}
+
+			final AHBottomNavigationItem item = (AHBottomNavigationItem) baseItem;
+
 			if (selectedBackgroundVisible) {
 				view.setSelected(i == itemIndex);
 			}
@@ -817,7 +875,7 @@ public class AHBottomNavigation extends FrameLayout {
 
 					if (circleRevealAnim != null && circleRevealAnim.isRunning()) {
 						circleRevealAnim.cancel();
-						setBackgroundColor(items.get(itemIndex).getColor(context));
+						setBackgroundColor(item.getColor(context));
 						backgroundColorView.setBackgroundColor(Color.TRANSPARENT);
 					}
 
@@ -826,12 +884,12 @@ public class AHBottomNavigation extends FrameLayout {
 					circleRevealAnim.addListener(new Animator.AnimatorListener() {
 						@Override
 						public void onAnimationStart(Animator animation) {
-							backgroundColorView.setBackgroundColor(items.get(itemIndex).getColor(context));
+							backgroundColorView.setBackgroundColor(item.getColor(context));
 						}
 
 						@Override
 						public void onAnimationEnd(Animator animation) {
-							setBackgroundColor(items.get(itemIndex).getColor(context));
+							setBackgroundColor(item.getColor(context));
 							backgroundColorView.setBackgroundColor(Color.TRANSPARENT);
 						}
 
@@ -846,7 +904,7 @@ public class AHBottomNavigation extends FrameLayout {
 					circleRevealAnim.start();
 				} else if (colored) {
 					AHHelper.updateViewBackgroundColor(this, currentColor,
-							items.get(itemIndex).getColor(context));
+							item.getColor(context));
 				} else {
 					if (defaultBackgroundResource != 0) {
 						setBackgroundResource(defaultBackgroundResource);
@@ -882,8 +940,13 @@ public class AHBottomNavigation extends FrameLayout {
 		}
 
 		currentItem = itemIndex;
+		AHBottomNavigationBaseItem item = items.get(currentItem);
+		if (item instanceof AHBottomNavigationButton) {
+			return;
+		}
+
 		if (currentItem > 0 && currentItem < items.size()) {
-			currentColor = items.get(currentItem).getColor(context);
+			currentColor = ((AHBottomNavigationItem) item).getColor(context);
 		} else if (currentItem == CURRENT_ITEM_NONE) {
 			if (defaultBackgroundResource != 0) {
 				setBackgroundResource(defaultBackgroundResource);
@@ -906,6 +969,10 @@ public class AHBottomNavigation extends FrameLayout {
 			}
 			
 			if (itemPosition != UPDATE_ALL_NOTIFICATIONS && itemPosition != i) {
+				continue;
+			}
+
+			if (items.get(i) instanceof AHBottomNavigationButton) {
 				continue;
 			}
 
@@ -982,7 +1049,7 @@ public class AHBottomNavigation extends FrameLayout {
 	/**
 	 * Add an item
 	 */
-	public void addItem(AHBottomNavigationItem item) {
+	public void addItem(AHBottomNavigationBaseItem item) {
 		if (this.items.size() > MAX_ITEMS) {
 			Log.w(TAG, "The items list should not have more than 5 items");
 		}
@@ -993,7 +1060,7 @@ public class AHBottomNavigation extends FrameLayout {
 	/**
 	 * Add all items
 	 */
-	public void addItems(List<AHBottomNavigationItem> items) {
+	public void addItems(List<AHBottomNavigationBaseItem> items) {
 		if (items.size() > MAX_ITEMS || (this.items.size() + items.size()) > MAX_ITEMS) {
 			Log.w(TAG, "The items list should not have more than 5 items");
 		}
@@ -1181,7 +1248,7 @@ public class AHBottomNavigation extends FrameLayout {
 	 * @param position int: item position
 	 * @return The item at the given position
 	 */
-	public AHBottomNavigationItem getItem(int position) {
+	public AHBottomNavigationBaseItem getItem(int position) {
 		if (position < 0 || position > items.size() - 1) {
 			Log.w(TAG, "The position is out of bounds of the items (" + items.size() + " elements)");
 			return null;

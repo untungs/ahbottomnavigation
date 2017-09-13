@@ -16,7 +16,7 @@ import java.util.List;
 public class AHBottomNavigationAdapter {
 
 	private Menu mMenu;
-	private List<AHBottomNavigationItem> navigationItems;
+	private List<AHBottomNavigationBaseItem> navigationItems;
 
 	/**
 	 * Constructor
@@ -84,7 +84,7 @@ public class AHBottomNavigationAdapter {
 	 * @param index
 	 * @return
 	 */
-	public AHBottomNavigationItem getNavigationItem(int index) {
+	public AHBottomNavigationBaseItem getNavigationItem(int index) {
 		return navigationItems.get(index);
 	}
 

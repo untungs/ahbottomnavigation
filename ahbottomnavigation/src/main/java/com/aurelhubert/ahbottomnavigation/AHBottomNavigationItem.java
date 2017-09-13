@@ -15,18 +15,14 @@ import android.support.v7.content.res.AppCompatResources;
  * AHBottomNavigationItem
  * The item is display in the AHBottomNavigation layout
  */
-public class AHBottomNavigationItem {
+public class AHBottomNavigationItem extends AHBottomNavigationBaseItem {
 	
 	private String title = "";
-	private Drawable drawable;
 	private int color = Color.GRAY;
 	
 	private
 	@StringRes
 	int titleRes = 0;
-	private
-	@DrawableRes
-	int drawableRes = 0;
 	private
 	@ColorRes
 	int colorRes = 0;
@@ -38,8 +34,8 @@ public class AHBottomNavigationItem {
 	 * @param resource Drawable resource
 	 */
 	public AHBottomNavigationItem(String title, @DrawableRes int resource) {
+		super(resource);
 		this.title = title;
-		this.drawableRes = resource;
 	}
 	
 	/**
@@ -49,8 +45,8 @@ public class AHBottomNavigationItem {
 	 */
 	@Deprecated
 	public AHBottomNavigationItem(String title, @DrawableRes int resource, @ColorRes int color) {
+		super(resource);
 		this.title = title;
-		this.drawableRes = resource;
 		this.color = color;
 	}
 	
@@ -62,8 +58,8 @@ public class AHBottomNavigationItem {
 	 * @param colorRes    Color resource
 	 */
 	public AHBottomNavigationItem(@StringRes int titleRes, @DrawableRes int drawableRes, @ColorRes int colorRes) {
+		super(drawableRes);
 		this.titleRes = titleRes;
-		this.drawableRes = drawableRes;
 		this.colorRes = colorRes;
 	}
 	
@@ -74,8 +70,8 @@ public class AHBottomNavigationItem {
 	 * @param drawable Drawable
 	 */
 	public AHBottomNavigationItem(String title, Drawable drawable) {
+		super(drawable);
 		this.title = title;
-		this.drawable = drawable;
 	}
 	
 	/**
@@ -86,8 +82,8 @@ public class AHBottomNavigationItem {
 	 * @param color    Color
 	 */
 	public AHBottomNavigationItem(String title, Drawable drawable, @ColorInt int color) {
+		super(drawable);
 		this.title = title;
-		this.drawable = drawable;
 		this.color = color;
 	}
 	
@@ -124,25 +120,5 @@ public class AHBottomNavigationItem {
 		this.colorRes = colorRes;
 		this.color = 0;
 	}
-	
-	public Drawable getDrawable(Context context) {
-		if (drawableRes != 0) {
-			try {
-				return AppCompatResources.getDrawable(context, drawableRes);
-			} catch (Resources.NotFoundException e) {
-				return ContextCompat.getDrawable(context, drawableRes);
-			}
-		}
-		return drawable;
-	}
-	
-	public void setDrawable(@DrawableRes int drawableRes) {
-		this.drawableRes = drawableRes;
-		this.drawable = null;
-	}
-	
-	public void setDrawable(Drawable drawable) {
-		this.drawable = drawable;
-		this.drawableRes = 0;
-	}
+
 }
