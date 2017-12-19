@@ -43,7 +43,9 @@ android {
 }
 
 dependencies {
-    implementation 'com.android.support:design:26.1.0'
+    implementation ('com.android.support:design:26.1.0') {
+        exclude group: 'android.arch.lifecycle'
+    }
 }
 
 // Place it at the end of the file
